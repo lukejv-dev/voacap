@@ -1,0 +1,19 @@
+/* Shared base styles for all VOACAP app pages. Page-specific overrides
+   (e.g. wider body max-width on result pages, chart/map containers)
+   stay in each template's own <style> block. */
+body { font-family: system-ui, sans-serif; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; max-width: 720px; }
+h1 { font-size: 1.4rem; }
+fieldset { border: 1px solid #ccc; border-radius: 6px; margin-bottom: 1rem; }
+legend { font-weight: 600; padding: 0 0.4rem; }
+label { display: block; margin: 0.5rem 0 0.2rem; font-size: 0.9rem; }
+input, select, textarea { width: 100%; padding: 0.4rem; box-sizing: border-box; font-size: 0.95rem; font-family: inherit; }
+textarea { font-family: ui-monospace, monospace; font-size: 0.85rem; }
+.row { display: flex; gap: 1rem; }
+.row > div { flex: 1; }
+.error { background: #fee; border: 1px solid #c33; color: #900; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; }
+button { margin-top: 1rem; padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
+nav { margin-bottom: 1rem; font-size: 0.9rem; }
+a.back { display: inline-block; margin-top: 1.5rem; }
+.back-actions { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; margin-top: 1.5rem; }
+.back-actions a.back, .back-actions form { margin-top: 0; }
+.link-button { background: none; border: none; padding: 0; margin: 0; font: inherit; font-size: 1rem; color: #2563eb; text-decoration: underline; cursor: pointer; }

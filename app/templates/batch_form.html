@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VOACAP Batch Prediction</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav><a href="/">Point-to-point</a> &nbsp;|&nbsp; <a href="/area">Area coverage</a> &nbsp;|&nbsp; <strong>Batch</strong></nav>
+<h1>VOACAP Batch Prediction</h1>
+<p>Run a list of independent point-to-point circuits (a small network of stations) against the same time/solar/antenna/frequency settings.</p>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<form method="post" action="/batch">
+  <fieldset>
+    <legend>Circuits</legend>
+    <label>One circuit per line: label_tx,label_rx,tx_lat,tx_lon,rx_lat,rx_lon</label>
+    <textarea name="circuits_csv" rows="8" required placeholder="FT.HOOD,FT.GORDON,31.13,-97.73,33.48,-81.95&#10;FT.HOOD,FT.RILEY,31.13,-97.73,39.03,-96.83">{{ circuits_csv }}</textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Shared time / solar activity</legend>
+    <div class="row">
+      <div>
+        <label>Month (1-12)</label>
+        <input type="number" name="month" value="{{ month }}" required min="1" max="12">
+      </div>
+      <div>
+        <label>Year</label>
+        <input type="number" name="year" value="{{ year }}" required min="1900" max="2100">
+      </div>
+      <div>
+        <label>Sunspot number</label>
+        <input type="number" step="any" name="sunspot_number" value="{{ sunspot_number }}" required min="0" max="300">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Shared antennas &amp; power</legend>
+    <div class="row">
+      <div>
+        <label>TX antenna</label>
+        <select name="tx_antenna">
+          {% for file, desc in antennas %}
+          <option value="{{ file }}" {% if file == tx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>RX antenna</label>
+        <select name="rx_antenna">
+          {% for file, desc in antennas %}
+          <option value="{{ file }}" {% if file == rx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <label>TX power (kW)</label>
+    <input type="number" step="any" name="tx_power_kw" value="{{ tx_power_kw }}" required min="0.001" max="1000">
+  </fieldset>
+
+  <fieldset>
+    <legend>Shared frequencies &amp; requirements</legend>
+    <label>Frequencies, MHz (1-9 values, space or comma separated)</label>
+    <input type="text" name="frequencies_mhz" value="{{ frequencies_mhz }}" required placeholder="e.g. 7.2 9.7 11.85 15.35 17.73">
+    <div class="row">
+      <div>
+        <label>Required reliability (%)</label>
+        <input type="number" step="any" name="required_reliability_pct" value="{{ required_reliability_pct }}" min="1" max="100">
+      </div>
+      <div>
+        <label>Required SNR (dB)</label>
+        <input type="number" step="any" name="required_snr_db" value="{{ required_snr_db }}">
+      </div>
+      <div>
+        <label>Noise (dBW)</label>
+        <input type="number" step="any" name="noise_dbw" value="{{ noise_dbw }}">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Min. takeoff angle (deg)</label>
+        <input type="number" step="any" name="min_takeoff_angle_deg" value="{{ min_takeoff_angle_deg }}">
+      </div>
+      <div>
+        <label>Multipath power tolerance (dB)</label>
+        <input type="number" step="any" name="multipath_power_tolerance_db" value="{{ multipath_power_tolerance_db }}">
+      </div>
+      <div>
+        <label>Multipath delay tolerance (ms)</label>
+        <input type="number" step="any" name="multipath_delay_tolerance_ms" value="{{ multipath_delay_tolerance_ms }}">
+      </div>
+    </div>
+  </fieldset>
+
+  <button type="submit">Run batch</button>
+</form>
+</body>
+</html>

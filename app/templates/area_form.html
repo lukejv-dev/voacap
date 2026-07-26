@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VOACAP Area Coverage Prediction</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav><a href="/">Point-to-point</a> &nbsp;|&nbsp; <strong>Area coverage</strong></nav>
+<h1>VOACAP Area Coverage Prediction</h1>
+<p>Coverage map from a fixed transmitter over a grid of receive points, powered by <a href="https://github.com/jawatson/voacapl" target="_blank">voacapl</a>'s native area mode.</p>
+
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+<form method="post" action="/predict-area">
+  <fieldset>
+    <legend>Transmitter &amp; coverage area</legend>
+    <label>Station label</label>
+    <input type="text" name="label" value="{{ label }}" required maxlength="18">
+    <div class="row">
+      <div>
+        <label>Center latitude (-90 to 90, +N/-S)</label>
+        <input type="number" step="any" name="center_lat" value="{{ center_lat }}" required min="-90" max="90">
+      </div>
+      <div>
+        <label>Center longitude (-99.99 to 99.99, +E/-W)</label>
+        <input type="number" step="any" name="center_lon" value="{{ center_lon }}" required min="-99.99" max="99.99">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Radius (km, from center)</label>
+        <input type="number" step="any" name="radius_km" value="{{ radius_km }}" required min="1">
+      </div>
+      <div>
+        <label>Grid step (km)</label>
+        <input type="number" step="any" name="step_km" value="{{ step_km }}" required min="1">
+      </div>
+    </div>
+    <p style="font-size:0.85rem;color:#666">Grid resolution is capped at 40&times;40 points in this v1 - a small radius/step ratio may be rounded up to fewer points than requested.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Time / Solar activity</legend>
+    <div class="row">
+      <div>
+        <label>Hour (GMT, 0-23)</label>
+        <input type="number" name="hour_gmt" value="{{ hour_gmt }}" required min="0" max="23">
+      </div>
+      <div>
+        <label>Month (1-12)</label>
+        <input type="number" name="month" value="{{ month }}" required min="1" max="12">
+      </div>
+      <div>
+        <label>Year</label>
+        <input type="number" name="year" value="{{ year }}" required min="1900" max="2100">
+      </div>
+      <div>
+        <label>Sunspot number</label>
+        <input type="number" step="any" name="sunspot_number" value="{{ sunspot_number }}" required min="0" max="300">
+      </div>
+    </div>
+    <p style="font-size:0.85rem;color:#666">An area run is a single-hour snapshot, unlike the point-to-point form's full 24-hour table.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Antennas &amp; power</legend>
+    <div class="row">
+      <div>
+        <label>TX antenna</label>
+        <select name="tx_antenna">
+          {% for file, desc in antennas %}
+          <option value="{{ file }}" {% if file == tx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>TX antenna bearing (deg)</label>
+        <input type="number" step="any" name="tx_bearing_deg" value="{{ tx_bearing_deg }}" required min="0" max="360">
+      </div>
+      <div>
+        <label>TX power (kW)</label>
+        <input type="number" step="any" name="tx_power_kw" value="{{ tx_power_kw }}" required min="0.001" max="1000">
+      </div>
+    </div>
+    <p style="font-size:0.85rem;color:#666">There's no single receiver to auto-compute a bearing toward (the "receiver" is the whole grid) - set the TX antenna's bearing directly.</p>
+    <label>RX antenna (generic receiver used across the grid)</label>
+    <select name="rx_antenna">
+      {% for file, desc in antennas %}
+      <option value="{{ file }}" {% if file == rx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+      {% endfor %}
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Frequencies &amp; requirements</legend>
+    <label>Frequencies, MHz (1-4 values, space or comma separated - one map per frequency)</label>
+    <input type="text" name="frequencies_mhz" value="{{ frequencies_mhz }}" required placeholder="e.g. 9.7 13.7 17.73">
+    <div class="row">
+      <div>
+        <label>Required reliability (%)</label>
+        <input type="number" step="any" name="required_reliability_pct" value="{{ required_reliability_pct }}" min="1" max="100">
+      </div>
+      <div>
+        <label>Required SNR (dB)</label>
+        <input type="number" step="any" name="required_snr_db" value="{{ required_snr_db }}">
+      </div>
+      <div>
+        <label>Noise (dBW)</label>
+        <input type="number" step="any" name="noise_dbw" value="{{ noise_dbw }}">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Min. takeoff angle (deg)</label>
+        <input type="number" step="any" name="min_takeoff_angle_deg" value="{{ min_takeoff_angle_deg }}">
+      </div>
+      <div>
+        <label>Multipath power tolerance (dB)</label>
+        <input type="number" step="any" name="multipath_power_tolerance_db" value="{{ multipath_power_tolerance_db }}">
+      </div>
+      <div>
+        <label>Multipath delay tolerance (ms)</label>
+        <input type="number" step="any" name="multipath_delay_tolerance_ms" value="{{ multipath_delay_tolerance_ms }}">
+      </div>
+    </div>
+  </fieldset>
+
+  <button type="submit">Run area prediction</button>
+</form>
+</body>
+</html>

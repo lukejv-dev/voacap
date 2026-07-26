@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VOACAP Prediction Result</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  body { max-width: 900px; }
+  #rel-chart-wrap { margin-top: 1.5rem; max-width: 100%; }
+</style>
+</head>
+<body>
+<h1>{{ label_tx }} &rarr; {{ label_rx }}</h1>
+<p>TX bearing: {{ tx_bearing }}&deg; &nbsp; RX bearing: {{ rx_bearing }}&deg;</p>
+<p style="font-size:0.85rem;color:#666">Reliability - the % of time the predicted SNR is at or above the required SNR - matching the original program's Run &gt; Graph &gt; REL option, per frequency, plus MUF and FOT for reference.</p>
+
+<div id="rel-chart-wrap">
+  <canvas id="rel-chart" height="90"></canvas>
+</div>
+
+<div class="back-actions">
+  <form method="get" action="/">
+    {% for key, value in submitted.items() %}
+    <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endfor %}
+    <button type="submit" class="link-button">&larr; Edit inputs</button>
+  </form>
+  <a class="back" href="/">Start a new prediction</a>
+</div>
+
+<script>
+  // chart: { hours: [...], muf: [...], fot: [...], frequencies: [...], series: [[...], ...] }
+  // - one reliability series per frequency (index-aligned with frequencies),
+  // plus the shared per-hour MUF/FOT lines - the same REL/MUF/FOT values
+  // VOACAP itself computes (parsed from the METHOD 24 and 26 tables in
+  // parser.py), just charted instead of printed. The original program's
+  // own REL graph is rendered by a separate GUI tool (not part of
+  // voacapl, the headless engine used here) from these same numbers -
+  // this chart is that graph's rebuild, not a different data source to
+  // cross-check against.
+  const chart = {{ chart_json | safe }};
+  const palette = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#7c3aed', '#0891b2', '#be185d', '#4d7c0f', '#7c2d12'];
+
+  const datasets = chart.frequencies.map((freq, i) => ({
+    label: `${freq} MHz`,
+    data: chart.series[i].map(v => v === null ? null : v * 100),
+    borderColor: palette[i % palette.length],
+    backgroundColor: palette[i % palette.length],
+    borderWidth: 2,
+    pointRadius: 2,
+    tension: 0.2,
+    yAxisID: 'y',
+  }));
+  datasets.push({
+    label: 'MUF',
+    data: chart.muf,
+    borderColor: '#666666',
+    borderDash: [4, 3],
+    borderWidth: 1.5,
+    pointRadius: 0,
+    tension: 0.2,
+    yAxisID: 'y1',
+  });
+  datasets.push({
+    // FOT ("frequency of optimum transmission") - VOACAP's own statistical
+    // value from the METHOD 26 table (parser.py), not a fixed % below MUF
+    // (that common rule of thumb doesn't match the real engine output).
+    label: 'FOT',
+    data: chart.fot,
+    borderColor: '#999999',
+    borderDash: [1, 2],
+    borderWidth: 1.5,
+    pointRadius: 0,
+    tension: 0.2,
+    yAxisID: 'y1',
+  });
+
+  new Chart(document.getElementById('rel-chart'), {
+    type: 'line',
+    data: { labels: chart.hours, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { title: { display: true, text: 'Hour (GMT)' } },
+        y: { title: { display: true, text: 'Reliability (%)' }, min: 0, max: 100, position: 'left' },
+        y1: { title: { display: true, text: 'MUF / FOT (MHz)' }, position: 'right', grid: { drawOnChartArea: false } },
+      },
+    },
+  });
+</script>
+</body>
+</html>
