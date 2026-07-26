@@ -8,16 +8,23 @@
 <style>
   body { max-width: 900px; }
   #rel-chart-wrap { margin-top: 1.5rem; max-width: 100%; }
+  #best-freq-strip { display: flex; margin-top: 0.5rem; border-radius: 6px; overflow: hidden; border: 1px solid #ccc; }
+  #best-freq-strip .segment { flex: 0 1 0; min-height: 2.75rem; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 600; text-align: center; padding: 0.2rem; overflow: hidden; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.4); }
+  #best-freq-strip .segment:last-child { border-right: none; }
+  #best-freq-strip .segment.no-data { background: #ddd; color: #666; font-weight: 400; }
 </style>
 </head>
 <body>
 <h1>{{ label_tx }} &rarr; {{ label_rx }}</h1>
 <p>TX bearing: {{ tx_bearing }}&deg; &nbsp; RX bearing: {{ rx_bearing }}&deg;</p>
-<p style="font-size:0.85rem;color:#666">Reliability - the % of time the predicted SNR is at or above the required SNR.</p>
+<p style="font-size:0.85rem;color:#666">Reliability - the % of time the predicted SNR is at or above the required SNR. The bold gold line is FOT (frequency of optimum transmission) - the recommended working frequency hour by hour; the bold dark line above it is MUF, the hard ceiling above which propagation fails. The shaded band between them is that hour's headroom.</p>
 
 <div id="rel-chart-wrap">
   <canvas id="rel-chart" height="90"></canvas>
 </div>
+
+<p style="font-size:0.85rem;color:#666;margin-top:1.5rem">Best frequency by hour - whichever frequency has the highest predicted reliability that hour, grouped into ranges. Hover a block for the exact hours and reliability.</p>
+<div id="best-freq-strip"></div>
 
 <div class="back-actions">
   <form method="get" action="/">
@@ -52,28 +59,37 @@
     tension: 0.2,
     yAxisID: 'y',
   }));
+  // MUF and FOT get bold, high-contrast treatment (vs. the thin gray dashed
+  // lines before) since users pick their working frequency off FOT, hour
+  // by hour - they need to read it at a glance, not hunt for it under the
+  // brighter per-frequency reliability lines. The shaded band between them
+  // is the FOT-to-MUF headroom VOACAP predicts for that hour.
   datasets.push({
-    label: 'MUF',
+    label: 'MUF (ceiling)',
     data: chart.muf,
-    borderColor: '#666666',
-    borderDash: [4, 3],
-    borderWidth: 1.5,
-    pointRadius: 0,
+    borderColor: '#1f2937',
+    backgroundColor: '#1f2937',
+    borderWidth: 3,
+    pointRadius: 3,
+    pointHoverRadius: 5,
     tension: 0.2,
     yAxisID: 'y1',
+    fill: false,
   });
   datasets.push({
     // FOT ("frequency of optimum transmission") - VOACAP's own statistical
     // value from the METHOD 26 table (parser.py), not a fixed % below MUF
     // (that common rule of thumb doesn't match the real engine output).
-    label: 'FOT',
+    label: 'FOT (recommended)',
     data: chart.fot,
-    borderColor: '#999999',
-    borderDash: [1, 2],
-    borderWidth: 1.5,
-    pointRadius: 0,
+    borderColor: '#eab308',
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    borderWidth: 3,
+    pointRadius: 3,
+    pointHoverRadius: 5,
     tension: 0.2,
     yAxisID: 'y1',
+    fill: '-1',
   });
 
   new Chart(document.getElementById('rel-chart'), {
@@ -88,6 +104,52 @@
         y1: { title: { display: true, text: 'MUF / FOT (MHz)' }, position: 'right', grid: { drawOnChartArea: false } },
       },
     },
+  });
+
+  // Best-frequency-by-hour strip: for each hour, pick the frequency with the
+  // highest predicted reliability (same chart.series data as the line
+  // chart above, just reduced to one "winner" per hour instead of plotted
+  // as overlapping lines) - then collapse consecutive hours with the same
+  // winner into a single block, since users planning band usage care about
+  // contiguous ranges ("use 9.7 MHz from 06-12Z"), not a 24-cell table.
+  const hourBest = chart.hours.map((_, h) => {
+    let bestIdx = null, bestVal = -1;
+    chart.series.forEach((series, i) => {
+      const v = series[h];
+      if (v !== null && v > bestVal) { bestVal = v; bestIdx = i; }
+    });
+    return bestIdx === null ? null : { freqIdx: bestIdx, reliability: bestVal };
+  });
+
+  const runs = [];
+  hourBest.forEach((best, h) => {
+    const key = best ? best.freqIdx : null;
+    const last = runs[runs.length - 1];
+    if (last && last.key === key) {
+      last.hours.push(chart.hours[h]);
+      last.reliabilities.push(best ? best.reliability : null);
+    } else {
+      runs.push({ key, hours: [chart.hours[h]], reliabilities: [best ? best.reliability : null] });
+    }
+  });
+
+  const strip = document.getElementById('best-freq-strip');
+  runs.forEach(run => {
+    const seg = document.createElement('div');
+    seg.className = 'segment' + (run.key === null ? ' no-data' : '');
+    seg.style.flexGrow = run.hours.length;
+    const hourRange = run.hours.length === 1 ? `${run.hours[0]}Z` : `${run.hours[0]}-${run.hours[run.hours.length - 1]}Z`;
+    if (run.key === null) {
+      seg.textContent = 'no data';
+      seg.title = `${hourRange}: no frequency met the requirements`;
+    } else {
+      const freq = chart.frequencies[run.key];
+      const avgRel = run.reliabilities.reduce((a, b) => a + b, 0) / run.reliabilities.length;
+      seg.style.background = palette[run.key % palette.length];
+      seg.textContent = `${freq} MHz`;
+      seg.title = `${hourRange}: ${freq} MHz, ${(avgRel * 100).toFixed(0)}% avg reliability`;
+    }
+    strip.appendChild(seg);
   });
 </script>
 </body>
