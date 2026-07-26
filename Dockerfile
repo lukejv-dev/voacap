@@ -51,7 +51,7 @@ RUN mkdir -p /opt/itshfbc \
 # App code
 COPY app/ /opt/app/
 WORKDIR /opt/app
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 ENV ITSHFBC_DIR=/opt/itshfbc \
     VOACAPL_BIN=/usr/local/bin/voacapl
