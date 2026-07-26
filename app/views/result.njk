@@ -28,7 +28,7 @@
 
 <div class="back-actions">
   <form method="get" action="/">
-    {% for key, value in submitted.items() %}
+    {% for key, value in submitted %}
     <input type="hidden" name="{{ key }}" value="{{ value }}">
     {% endfor %}
     <button type="submit" class="link-button">&larr; Edit inputs</button>
@@ -41,7 +41,7 @@
   // - one reliability series per frequency (index-aligned with frequencies),
   // plus the shared per-hour MUF/FOT lines - the same REL/MUF/FOT values
   // VOACAP itself computes (parsed from the METHOD 24 and 26 tables in
-  // parser.py), just charted instead of printed. The original program's
+  // lib/parser.js), just charted instead of printed. The original program's
   // own REL graph is rendered by a separate GUI tool (not part of
   // voacapl, the headless engine used here) from these same numbers -
   // this chart is that graph's rebuild, not a different data source to
@@ -78,8 +78,8 @@
   });
   datasets.push({
     // FOT ("frequency of optimum transmission") - VOACAP's own statistical
-    // value from the METHOD 26 table (parser.py), not a fixed % below MUF
-    // (that common rule of thumb doesn't match the real engine output).
+    // value from the METHOD 26 table (lib/parser.js), not a fixed % below
+    // MUF (that common rule of thumb doesn't match the real engine output).
     label: 'FOT (recommended)',
     data: chart.fot,
     borderColor: '#eab308',

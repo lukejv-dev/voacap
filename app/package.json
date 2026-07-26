@@ -1,0 +1,14 @@
+{
+  "name": "voacap-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VOACAP HF propagation prediction web app (Node/Express port)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "nunjucks": "3.2.4"
+  }
+}

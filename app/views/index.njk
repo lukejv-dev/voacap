@@ -83,16 +83,16 @@
       <div>
         <label>TX antenna</label>
         <select name="tx_antenna">
-          {% for file, desc in antennas %}
-          <option value="{{ file }}" {% if file == tx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+          {% for antenna in antennas %}
+          <option value="{{ antenna.file }}" {% if antenna.file == tx_antenna %}selected{% endif %}>{{ antenna.file }} - {{ antenna.desc }}</option>
           {% endfor %}
         </select>
       </div>
       <div>
         <label>RX antenna</label>
         <select name="rx_antenna">
-          {% for file, desc in antennas %}
-          <option value="{{ file }}" {% if file == rx_antenna %}selected{% endif %}>{{ file }} - {{ desc }}</option>
+          {% for antenna in antennas %}
+          <option value="{{ antenna.file }}" {% if antenna.file == rx_antenna %}selected{% endif %}>{{ antenna.file }} - {{ antenna.desc }}</option>
           {% endfor %}
         </select>
       </div>
@@ -144,7 +144,7 @@
 
 <script>
   // cities: [[city, nation, lat, lon], ...] - VOACAP's own bundled
-  // worldwide city database (see geo_cities.py). Built into the shared
+  // worldwide city database (see lib/geoCities.js). Built into the shared
   // datalist client-side rather than server-rendering ~4000+ <option>
   // tags twice (once as HTML, once as this same JSON).
   const cities = {{ cities_json | safe }};

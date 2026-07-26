@@ -20,10 +20,11 @@ RUN cd voacapl \
     && make \
     && make install
 
-# Pinned to an exact patch version (not floating "3.13" or "3.13-slim") so
-# the interpreter doesn't drift out from under the DNS record this is
-# hosted under - bump this deliberately, not via an unpinned rebuild.
-FROM python:3.13.13-slim-bookworm
+# Pinned to an exact patch version (not floating "24" or "24-slim") so
+# the runtime doesn't drift out from under the DNS record this is hosted
+# under - bump this deliberately, not via an unpinned rebuild. Was Python
+# 3.13.13 (see git history) before the Node/Express rewrite.
+FROM node:24.18.0-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgfortran5 \
@@ -49,12 +50,12 @@ RUN mkdir -p /opt/itshfbc \
 
 # App code
 COPY app/ /opt/app/
-RUN pip3 install --no-cache-dir -r /opt/app/requirements.txt
+WORKDIR /opt/app
+RUN npm install --omit=dev
 
 ENV ITSHFBC_DIR=/opt/itshfbc \
     VOACAPL_BIN=/usr/local/bin/voacapl
 
-WORKDIR /opt/app
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["node", "server.js"]
