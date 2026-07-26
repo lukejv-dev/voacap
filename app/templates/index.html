@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>VOACAP HF Propagation Prediction</title>
+<title>VOACAP</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<nav><strong>Point-to-point</strong> &nbsp;|&nbsp; <a href="/area">Area coverage</a> &nbsp;|&nbsp; <a href="/batch">Batch</a></nav>
 <h1>VOACAP HF Propagation Prediction</h1>
-<p>Point-to-point circuit reliability prediction, powered by <a href="https://github.com/jawatson/voacapl" target="_blank">voacapl</a> (NTIA/ITS VOACAP engine).</p>
+<p>Point-to-point reliability prediction (NTIA/ITS VOACAP engine)</p>
 
 {% if error %}<div class="error">{{ error }}</div>{% endif %}
 
 <form method="post" action="/predict">
   <fieldset>
     <legend>Circuit</legend>
-    <p style="font-size:0.85rem;color:#666">Don't want to look up lat/lon by hand? Search VOACAP's own worldwide city database below - picking a city fills in its label and coordinates (still editable afterward).</p>
+    <p style="font-size:0.85rem;color:#666">Don't want to look up location by hand? Search VOACAP's own worldwide city database below - picking a city fills in its label and coordinates (still editable afterward).</p>
     <div class="row">
       <div>
         <label>Transmitter label</label>
@@ -138,6 +137,10 @@
 
   <button type="submit">Run prediction</button>
 </form>
+
+<div class="back-actions">
+  <a class="link-button" href="/">Reset to defaults</a>
+</div>
 
 <script>
   // cities: [[city, nation, lat, lon], ...] - VOACAP's own bundled
