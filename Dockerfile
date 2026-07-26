@@ -20,10 +20,13 @@ RUN cd voacapl \
     && make \
     && make install
 
-FROM debian:bookworm-slim
+# Pinned to an exact patch version (not floating "3.13" or "3.13-slim") so
+# the interpreter doesn't drift out from under the DNS record this is
+# hosted under - bump this deliberately, not via an unpinned rebuild.
+FROM python:3.13.13-slim-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgfortran5 python3 python3-pip \
+        libgfortran5 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/bin/voacapl /usr/local/bin/voacapl
@@ -46,7 +49,7 @@ RUN mkdir -p /opt/itshfbc \
 
 # App code
 COPY app/ /opt/app/
-RUN pip3 install --break-system-packages --no-cache-dir -r /opt/app/requirements.txt
+RUN pip3 install --no-cache-dir -r /opt/app/requirements.txt
 
 ENV ITSHFBC_DIR=/opt/itshfbc \
     VOACAPL_BIN=/usr/local/bin/voacapl
