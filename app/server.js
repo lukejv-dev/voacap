@@ -51,18 +51,26 @@ app.get("/healthz", (req, res) => {
 
 function formDefaults() {
   return {
-    label_tx: "",
-    label_rx: "",
-    tx_lat: "",
-    tx_lon: "",
-    rx_lat: "",
-    rx_lon: "",
+    // Chicago -> New York, a real domestic circuit pre-filled so a new
+    // user can just hit "Run prediction" and see how the tool behaves
+    // before entering their own circuit. Coordinates are VOACAP's own
+    // bundled geostate/ILLINOIS.GEO and geostate/NEWYORK.GEO entries (see
+    // lib/geoCities.js), not hand-typed, so they match what picking these
+    // same cities from the search box above would produce.
+    label_tx: "CHICAGO",
+    label_rx: "NEW YORK",
+    tx_lat: 41.8833,
+    tx_lon: -87.6333,
+    rx_lat: 40.7167,
+    rx_lon: -74.0,
     month: 1,
     year: 2026,
     sunspot_number: 100,
     tx_antenna: DEFAULT_ANTENNA,
     rx_antenna: DEFAULT_ANTENNA,
-    tx_power_kw: 1.0,
+    // Typical amateur-radio power level (150 W) rather than the earlier
+    // 1 kW broadcast-station-scale default.
+    tx_power_kw: 0.15,
     // Classic VOACAP 9-frequency test set - each sits inside a standard
     // shortwave broadcast band (49m/41m/31m/25m/22m/19m/16m/13m/11m).
     frequencies_mhz: "6.07 7.20 9.70 11.85 13.70 15.35 17.73 21.65 25.89",
