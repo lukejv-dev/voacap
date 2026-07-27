@@ -101,7 +101,67 @@ function parseOutput(text) {
     row.fot = fotByHour.has(row.gmt) ? fotByHour.get(row.gmt) : null;
   }
 
-  return { frequenciesMhz: frequencies, rows, rawOutput: text };
+  return {
+    frequenciesMhz: frequencies,
+    rows,
+    headerLines: parseHeaderBlock(lines),
+    rawOutput: text,
+  };
+}
+
+/**
+ * Extracts the engine's own run-parameter header block - the summary the
+ * original program prints above its charts - verbatim from the output, e.g.:
+ *
+ *   Jan    2026          SSN = 100.                Minimum Angle= 3.000 degrees
+ *   CHICAGO             NEW YORK              AZIMUTHS          N. MI.      KM
+ *   41.88 N   87.63 W - 40.72 N   74.00 W     91.92  280.94     618.0   1144.5
+ *   XMTR  2-30 IONCAP #23[samples/sample.23    ] Az= 92.0 OFFaz=359.9   0.150kW
+ *   RCVR  2-30 IONCAP #23[samples/sample.23    ] Az=281.0 OFFaz=359.9
+ *   3 MHz NOISE = -145.0 dBW     REQ. REL = 45%    REQ. SNR = 27.0 dB
+ *
+ * Taken straight from the engine rather than rebuilt from our own inputs, so
+ * the figures shown are provably the ones the engine actually used. That
+ * distinction is not academic - a reconstruction differed from the engine on
+ * real values: the engine reports 618.0 N.MI./1144.5 KM where a haversine
+ * from the same coordinates gives 618.3/1145.0, and it computes a real
+ * OFFaz (0.0/0.1/359.9/360.0 seen in testing) rather than a flat 0.0,
+ * because the antenna bearing on the ANTENNA card is rounded to 1 decimal
+ * while the azimuth it's compared against is not.
+ *
+ * The block sits just after the "~METHOD nn" page banner, and is terminated
+ * by the first blank line. Only the METHOD 24 pass emits one (the METHOD 26
+ * pass appended by lib/deck.js does not), so the first block found is the
+ * only one. Note a multipath-tolerance line does NOT appear here even though
+ * we do send those tolerances on the SYSTEM card - METHOD 24's header simply
+ * doesn't echo them (verified: zero MULTIPATH lines in real output).
+ *
+ * Returns [] if no banner is found, so a header-less output degrades to
+ * simply not rendering the block rather than failing the whole prediction.
+ */
+function parseHeaderBlock(lines) {
+  let bannerIdx = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes("~METHOD")) {
+      bannerIdx = i;
+      break;
+    }
+  }
+  if (bannerIdx === null) return [];
+
+  const block = [];
+  for (let i = bannerIdx + 1; i < lines.length; i++) {
+    // strip the form-feed the engine uses for page breaks, then treat the
+    // first blank line after the block's content as its terminator (leading
+    // blanks between banner and content are skipped)
+    const line = lines[i].replace(/\f/g, "");
+    if (!line.trim()) {
+      if (block.length === 0) continue;
+      break;
+    }
+    block.push(line.replace(/\s+$/, ""));
+  }
+  return block;
 }
 
 // Parses the METHOD 26 GMT/LMT/FOT/HPF/ESMUF/MUF/LUF table (searched for

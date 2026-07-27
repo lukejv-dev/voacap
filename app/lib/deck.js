@@ -96,7 +96,14 @@ function sunspotCard(ssn) {
 
 function labelCard(tx, rx) {
   // "LABEL     " (10 chars) + tx left-justified in 20 + rx left-justified
-  return "LABEL     " + tx.padEnd(20, " ") + rx + CRLF;
+  //
+  // Both labels are truncated to the 20-char field width, matching what the
+  // original program does (its header shows e.g. "NAVAL AVIONICS CENTE").
+  // This is a correctness fix, not just cosmetic: verified against the real
+  // engine, a tx label longer than 20 chars runs straight into the rx label
+  // with no separator ("...INDIANAPOLISFORT GORDON...") and the engine then
+  // echoes that single mashed-together string as the circuit name.
+  return "LABEL     " + tx.slice(0, 20).padEnd(20, " ") + rx.slice(0, 20) + CRLF;
 }
 
 function circuitCard(req) {

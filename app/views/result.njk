@@ -12,6 +12,11 @@
   #best-freq-strip .segment { flex: 0 1 0; min-height: 2.75rem; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 600; text-align: center; padding: 0.2rem; overflow: hidden; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.4); }
   #best-freq-strip .segment:last-child { border-right: none; }
   #best-freq-strip .segment.no-data { background: #ddd; color: #666; font-weight: 400; }
+  /* Run-parameter summary block - the ITSHFBC-style header the user grabs
+     alongside the chart to record which inputs produced it. Monospace, and
+     white-space:pre, because these lines come verbatim from the engine's
+     own fixed-column output - any reflowing would break their alignment. */
+  #run-info { margin-top: 0.5rem; padding: 0.75rem 1rem; border: 1px solid #ccc; border-radius: 6px; background: #fafafa; font-family: ui-monospace, "Cascadia Code", "Consolas", monospace; font-size: 0.8rem; line-height: 1.5; white-space: pre; overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -25,6 +30,12 @@
 
 <p style="font-size:0.85rem;color:#666;margin-top:1.5rem">Best frequency by hour - whichever frequency has the highest predicted reliability that hour, grouped into ranges. Hover a block for the exact hours and reliability.</p>
 <div id="best-freq-strip"></div>
+
+{% if run_info_lines and run_info_lines.length %}
+<p style="font-size:0.85rem;color:#666;margin-top:1.5rem">Run parameters - reproduced verbatim from the engine's own output header, so these are provably the values the prediction was computed with. Capture it together with the chart above.</p>
+<div id="run-info">{% for line in run_info_lines %}{{ line }}
+{% endfor %}</div>
+{% endif %}
 
 <div class="back-actions">
   <form method="get" action="/">

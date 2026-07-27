@@ -201,6 +201,11 @@ app.post("/predict", async (req, res) => {
     tx_bearing: Math.round(txBearing * 10) / 10,
     rx_bearing: Math.round(rxBearing * 10) / 10,
     chart_json: chartData(result),
+    // Run-parameter summary block, taken straight from the engine's own
+    // output header rather than rebuilt from `submitted` - see
+    // parseHeaderBlock in lib/parser.js for why reconstructing it produced
+    // provably different numbers.
+    run_info_lines: result.headerLines,
     submitted,
   });
 });
